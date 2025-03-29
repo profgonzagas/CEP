@@ -1,105 +1,118 @@
 package org.example.project
 
-//import br.edu.utfpr.consultacep.ui.CepViewModel
-//import br.edu.utfpr.consultacep.ui.CepViewModelFactory
-//import br.edu.utfpr.consultacep.databinding.ActivityMainBinding
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
-import android.view.View
-import android.view.inputmethod.EditorInfo
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import org.example.project.databinding.ActivityMainBinding
-import org.example.project.ui.CepViewModel
-import org.example.project.ui.CepViewModelFactory
-//import org.example.project.data.model.endereco
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-
-
-class MainActivity : AppCompatActivity() {
-    private lateinit var viewModel: CepViewModel
-    private lateinit var binding: ActivityMainBinding
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        Log.d("MainActivity", "Hello from shared module: ${Greeting().greet()}")
-
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        val editCep = binding.editCep
-        val btnBuscar = binding.btnBuscar
-        val progress = binding.progress
-        val txtCep = binding.txtCep
-        val txtLogradouro = binding.txtLogradouro
-        val txtBairro = binding.txtBairro
-        val txtLocalidade = binding.txtLocalidade
-        val txtUf = binding.txtUf
-
-        viewModel = ViewModelProvider(this, CepViewModelFactory())[CepViewModel::class.java]
-
-        viewModel.formState.observe(this@MainActivity, Observer {
-            val formState = it ?: return@Observer
-
-            btnBuscar.isEnabled = formState.isDataValid
-            btnBuscar.visibility = if (formState.isLoading) View.GONE else View.VISIBLE
-            progress.visibility = if (formState.isLoading) View.VISIBLE else View.GONE
-
-            txtCep.text = getString(R.string.cep, formState.endereco.cep)
-            txtLogradouro.text = getString(R.string.logradouro, formState.endereco.logradouro)
-            txtBairro.text = getString(R.string.bairro, formState.endereco.bairro)
-            txtLocalidade.text = getString(R.string.localidade, formState.endereco.localidade)
-            txtUf.text = getString(R.string.uf, formState.endereco.uf)
-        })
-
-        editCep.apply {
-            addTextChangedListener(object : TextWatcher {
-                private var isUpdating = false
-
-                override fun afterTextChanged(editable: Editable?) {
-                    if (isUpdating || editable == null) return
-
-                    isUpdating = true
-                    val filteredValue = editable.toString().replace("\\D".toRegex(), "")
-                    var formattedValue = ""
-
-                    filteredValue.mapIndexed { index, char ->
-                        if (index == 5) {
-                            formattedValue += "-"
-                        }
-                        if (index <= 7) {
-                            formattedValue += char
-                        }
-                    }
-
-                    editCep.setText(formattedValue)
-                    editCep.setSelection(formattedValue.length)
-                    isUpdating = false
-
-                    viewModel.onCepChanged(formattedValue)
-                }
-
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            })
-
-            setOnEditorActionListener { _, actionId, _ ->
-                when (actionId) {
-                    EditorInfo.IME_ACTION_DONE ->
-                        viewModel.buscarCep(editCep.text.toString())
-                }
-                false
+        setContent {
+            MaterialTheme {
+                CepConsultaScreen()
             }
-        }
-
-        btnBuscar.setOnClickListener {
-            val cep = editCep.text.toString()
-            viewModel.buscarCep(cep)
         }
     }
 }
+
+@Composable
+fun CepConsultaScreen() {
+    var cep by remember { mutableStateOf("") }
+    var resultado by remember { mutableStateOf<CepResult?>(null) }
+    var isButtonEnabled by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        OutlinedTextField(
+            value = cep,
+            onValueChange = { newCep ->
+                cep = newCep
+                isButtonEnabled = validarCep(newCep)
+            },
+            label = { Text("Digite o CEP") },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ElevatedButton(
+            onClick = {
+                coroutineScope.launch {
+                    resultado = consultarCep(cep)
+                }
+            },
+            enabled = isButtonEnabled,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Consultar")
+        }
+
+        resultado?.let {
+            Text("Rua: ${it.logradouro}")
+            Text("Bairro: ${it.bairro}")
+            Text("Cidade: ${it.localidade}")
+            Text("Estado: ${it.uf}")
+            Text("DDD: ${it.ddd}")
+        }
+    }
+}
+
+private fun validarCep(cep: String): Boolean {
+    return cep.length == 8 && cep.all { it.isDigit() }
+}
+
+suspend fun consultarCep(cep: String): CepResult? {
+    return try {
+        withContext(Dispatchers.IO) {
+            val service = RetrofitInstance.api
+            service.getCep(cep)
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+interface ViaCepApi {
+    @GET("ws/{cep}/json/")
+    suspend fun getCep(@Path("cep") cep: String): CepResult
+}
+
+object RetrofitInstance {
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://viacep.com.br/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val api: ViaCepApi by lazy {
+        retrofit.create(ViaCepApi::class.java)
+    }
+}
+
+data class CepResult(
+    val logradouro: String,
+    val bairro: String,
+    val localidade: String,
+    val uf: String,
+    val ddd: String
+)
