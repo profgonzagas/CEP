@@ -1,6 +1,10 @@
-package br.edu.utfpr.consultacep.ui
+//package br.edu.utfpr.consultacep.ui
 
-import br.edu.utfpr.consultacep.shared.data.model.Endereco
+//import org.example.project.Endereco
+
+package org.example.project.ui
+import org.example.project.Endereco
+//import br.edu.utfpr.consultacep.shared.data.model.Endereco
 
 data class CepFormState(
     val cep: String = "",

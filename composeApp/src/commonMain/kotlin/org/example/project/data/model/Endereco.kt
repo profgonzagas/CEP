@@ -1,4 +1,6 @@
-package br.edu.utfpr.consultacep.shared.data.model
+//package br.edu.utfpr.consultacep.shared.data.model
+package org.example.project
+
 import kotlinx.serialization.Serializable
 
 @Serializable

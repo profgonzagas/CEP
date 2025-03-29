@@ -1,25 +1,22 @@
 package org.example.project
 
+//import br.edu.utfpr.consultacep.ui.CepViewModel
+//import br.edu.utfpr.consultacep.ui.CepViewModelFactory
+//import br.edu.utfpr.consultacep.databinding.ActivityMainBinding
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModelProvider
-//import br.edu.utfpr.consultacep.ui.CepViewModel
-//import br.edu.utfpr.consultacep.ui.CepViewModelFactory
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import org.example.project.databinding.ActivityMainBinding
-//import br.edu.utfpr.consultacep.databinding.ActivityMainBinding
-import org.example.project.Greeting
-import br.edu.utfpr.consultacep.ui.CepViewModel
-import br.edu.utfpr.consultacep.ui.CepViewModelFactory
+import org.example.project.ui.CepViewModel
+import org.example.project.ui.CepViewModelFactory
+//import org.example.project.data.model.endereco
+
 
 
 class MainActivity : AppCompatActivity() {

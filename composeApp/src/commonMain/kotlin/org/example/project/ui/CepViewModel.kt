@@ -1,12 +1,13 @@
-package br.edu.utfpr.consultacep.ui
+//package br.edu.utfpr.consultacep.ui
+package org.example.project.ui
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.edu.utfpr.consultacep.shared.data.repository.CepRepository
-import br.edu.utfpr.consultacep.shared.data.validator.CepValidator
+import org.example.project.data.repository.CepRepository
+import org.example.project.data.validator.CepValidator
 import kotlinx.coroutines.launch
 
 class CepViewModel(

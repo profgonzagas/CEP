@@ -1,6 +1,8 @@
-package br.edu.utfpr.consultacep.shared.data.repository
+package org.example.project.data.repository
 
-import br.edu.utfpr.consultacep.shared.data.model.Endereco
+//import br.edu.utfpr.consultacep.shared.data.model.Endereco
+//import org.example.project.data.model.Endereco
+import org.example.project.Endereco
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

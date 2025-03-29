@@ -1,4 +1,5 @@
-package br.edu.utfpr.consultacep.shared.data.validator
+//package br.edu.utfpr.consultacep.shared.data.validator
+package org.example.project.data.validator
 
 class CepValidator {
 
