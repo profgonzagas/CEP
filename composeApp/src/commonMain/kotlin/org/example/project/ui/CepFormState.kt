@@ -13,3 +13,4 @@ data class CepFormState(
     val hasErrorLoading: Boolean = false,
     val endereco: Endereco = Endereco()
 )
+
