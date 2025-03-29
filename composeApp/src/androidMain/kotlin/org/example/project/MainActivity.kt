@@ -60,7 +60,7 @@ fun CepConsultaScreen() {
 
         ElevatedButton(
             onClick = {
-                // Limpa resultado anterior
+                // Limpar resultado anterior
                 resultado = null
 
                 isLoading = true
@@ -71,6 +71,7 @@ fun CepConsultaScreen() {
                     resultado = response
                     isLoading = false
                     isInputEnabled = true
+                    isButtonEnabled = true
                 }
             },
             enabled = isButtonEnabled && !isLoading,
@@ -86,12 +87,15 @@ fun CepConsultaScreen() {
             }
         }
 
+
         resultado?.let {
-            Text("Rua: ${it.logradouro}")
-            Text("Bairro: ${it.bairro}")
-            Text("Cidade: ${it.localidade}")
-            Text("Estado: ${it.uf}")
-            Text("DDD: ${it.ddd}")
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("CEP: ${it.cep}")
+                Text("Rua: ${it.logradouro}")
+                Text("Bairro: ${it.bairro}")
+                Text("Cidade: ${it.localidade}")
+                Text("Estado: ${it.uf}")
+            }
         }
     }
 }
@@ -114,8 +118,8 @@ interface ViaCepApi {
 
 object RetrofitInstance {
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://viacep.com.br/")
-        .addConverterFactory(GsonConverterFactory.create())
+        .baseUrl("https://viacep.com.br/") // URL base da API
+        .addConverterFactory(GsonConverterFactory.create()) // Conversor de JSON
         .build()
 
     val api: ViaCepApi by lazy {
@@ -124,6 +128,7 @@ object RetrofitInstance {
 }
 
 data class CepResult(
+    val cep: String,
     val logradouro: String,
     val bairro: String,
     val localidade: String,
