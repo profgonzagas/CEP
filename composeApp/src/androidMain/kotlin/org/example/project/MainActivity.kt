@@ -5,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -36,7 +35,10 @@ class MainActivity : ComponentActivity() {
 fun CepConsultaScreen() {
     var cep by remember { mutableStateOf("") }
     var resultado by remember { mutableStateOf<CepResult?>(null) }
-    var isButtonEnabled by remember { mutableStateOf(false) }
+    var isButtonEnabled by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(false) }
+    var isInputEnabled by remember { mutableStateOf(true) }
+
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -49,23 +51,39 @@ fun CepConsultaScreen() {
             value = cep,
             onValueChange = { newCep ->
                 cep = newCep
-                isButtonEnabled = validarCep(newCep)
             },
             label = { Text("Digite o CEP") },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+            enabled = isInputEnabled,
             modifier = Modifier.fillMaxWidth()
         )
 
         ElevatedButton(
             onClick = {
+                // Limpa resultado anterior
+                resultado = null
+
+                isLoading = true
+                isInputEnabled = false
+
                 coroutineScope.launch {
-                    resultado = consultarCep(cep)
+                    val response = consultarCep(cep)
+                    resultado = response
+                    isLoading = false
+                    isInputEnabled = true
                 }
             },
-            enabled = isButtonEnabled,
+            enabled = isButtonEnabled && !isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Consultar")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colors.onPrimary
+                )
+            } else {
+                Text("Consultar")
+            }
         }
 
         resultado?.let {
@@ -76,10 +94,6 @@ fun CepConsultaScreen() {
             Text("DDD: ${it.ddd}")
         }
     }
-}
-
-private fun validarCep(cep: String): Boolean {
-    return cep.length == 8 && cep.all { it.isDigit() }
 }
 
 suspend fun consultarCep(cep: String): CepResult? {
