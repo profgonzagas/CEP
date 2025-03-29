@@ -38,63 +38,81 @@ fun CepConsultaScreen() {
     var isButtonEnabled by remember { mutableStateOf(true) }
     var isLoading by remember { mutableStateOf(false) }
     var isInputEnabled by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        OutlinedTextField(
-            value = cep,
-            onValueChange = { newCep ->
-                cep = newCep
-            },
-            label = { Text("Digite o CEP") },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-            enabled = isInputEnabled,
-            modifier = Modifier.fillMaxWidth()
-        )
 
-        ElevatedButton(
-            onClick = {
-                // Limpar resultado anterior
-                resultado = null
-
-                isLoading = true
-                isInputEnabled = false
-
-                coroutineScope.launch {
-                    val response = consultarCep(cep)
-                    resultado = response
-                    isLoading = false
-                    isInputEnabled = true
-                    isButtonEnabled = true
-                }
-            },
-            enabled = isButtonEnabled && !isLoading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colors.onPrimary
-                )
-            } else {
-                Text("Consultar")
-            }
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            errorMessage = null
         }
+    }
 
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize()
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            OutlinedTextField(
+                value = cep,
+                onValueChange = { newCep -> cep = newCep },
+                label = { Text("Digite o CEP") },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                enabled = isInputEnabled,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        resultado?.let {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text("CEP: ${it.cep}")
-                Text("Rua: ${it.logradouro}")
-                Text("Bairro: ${it.bairro}")
-                Text("Cidade: ${it.localidade}")
-                Text("Estado: ${it.uf}")
+            ElevatedButton(
+                onClick = {
+
+                    resultado = null
+                    errorMessage = null
+
+                    isLoading = true
+                    isInputEnabled = false
+
+                    coroutineScope.launch {
+                        val response = consultarCep(cep)
+                        if (response != null) {
+                            resultado = response
+                        } else {
+                            errorMessage = "Erro ao consultar o CEP. Tente novamente."
+                        }
+                        isLoading = false
+                        isInputEnabled = true
+                        isButtonEnabled = true
+                    }
+                },
+                enabled = isButtonEnabled && !isLoading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colors.onPrimary
+                    )
+                } else {
+                    Text("Consultar")
+                }
+            }
+
+            resultado?.let {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("CEP: ${it.cep}")
+                    Text("Logradouro: ${it.logradouro}")
+                    Text("Bairro: ${it.bairro}")
+                    Text("Localidade: ${it.localidade}")
+                    Text("UF: ${it.uf}")
+                }
             }
         }
     }
@@ -133,5 +151,5 @@ data class CepResult(
     val bairro: String,
     val localidade: String,
     val uf: String,
-    val ddd: String
+   // val ddd: String
 )
